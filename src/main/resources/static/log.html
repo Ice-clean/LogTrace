@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>LogTrace View Page</title>
+    <script type="text/javascript" src="js/jquery.js"></script>
+</head>
+<body>
+<div id="content"></div>
+
+<script type="text/javascript">
+    // 获取日志的显示内容
+    let content = document.getElementById("content");
+
+    // 获取当前域名和端口，然后建立 websocket 连接
+    ws = new WebSocket("ws://" + window.location.host + window.location.pathname);
+
+    ws.onopen = function () {
+
+    }
+    ws.onmessage = function (event) {
+        let item = document.createElement("p")
+        item.innerHTML = event.data
+        content.insertBefore(item, content.firstChild)
+    }
+</script>
+</body>
+</html>

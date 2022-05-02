@@ -1,0 +1,121 @@
+{
+  "groups": [
+    {
+      "name": "log-trace",
+      "type": "top.iceclean.logtrace.config.LogTraceConfig",
+      "sourceType": "top.iceclean.logtrace.config.LogTraceConfig"
+    },
+    {
+      "name": "log-trace.console",
+      "type": "top.iceclean.logtrace.config.LogTraceConfig$Console",
+      "sourceType": "top.iceclean.logtrace.config.LogTraceConfig",
+      "sourceMethod": "getConsole()"
+    },
+    {
+      "name": "log-trace.data-base",
+      "type": "top.iceclean.logtrace.config.LogTraceConfig$Database",
+      "sourceType": "top.iceclean.logtrace.config.LogTraceConfig",
+      "sourceMethod": "getDataBase()"
+    },
+    {
+      "name": "log-trace.file",
+      "type": "top.iceclean.logtrace.config.LogTraceConfig$File",
+      "sourceType": "top.iceclean.logtrace.config.LogTraceConfig",
+      "sourceMethod": "getFile()"
+    },
+    {
+      "name": "log-trace.output",
+      "type": "top.iceclean.logtrace.config.LogTraceConfig$Output",
+      "sourceType": "top.iceclean.logtrace.config.LogTraceConfig",
+      "sourceMethod": "getOutput()"
+    }
+  ],
+  "properties": [
+    {
+      "name": "log-trace.console.enabled",
+      "type": "java.lang.Boolean",
+      "description": "控制台默认输出",
+      "sourceType": "top.iceclean.logtrace.config.LogTraceConfig$Console",
+      "defaultValue": true
+    },
+    {
+      "name": "log-trace.console.pattern",
+      "type": "java.lang.String",
+      "description": "输出格式",
+      "sourceType": "top.iceclean.logtrace.config.LogTraceConfig$Console",
+      "defaultValue": "%yellow(%date{yyyy-MM-dd HH:mm:ss}) %highlight(%-5level) %magenta([%thread]) %blue(%file:%line) >>\u001b[39;37;0m %msg\n\u001b[39;37;0m"
+    },
+    {
+      "name": "log-trace.data-base.driver",
+      "type": "java.lang.String",
+      "description": "数据库连接参数：驱动、链接、用户名和密码",
+      "sourceType": "top.iceclean.logtrace.config.LogTraceConfig$Database"
+    },
+    {
+      "name": "log-trace.data-base.enabled",
+      "type": "java.lang.Boolean",
+      "description": "数据库默认不输出",
+      "sourceType": "top.iceclean.logtrace.config.LogTraceConfig$Database",
+      "defaultValue": false
+    },
+    {
+      "name": "log-trace.data-base.password",
+      "type": "java.lang.String",
+      "description": "数据库连接参数：驱动、链接、用户名和密码",
+      "sourceType": "top.iceclean.logtrace.config.LogTraceConfig$Database"
+    },
+    {
+      "name": "log-trace.data-base.url",
+      "type": "java.lang.String",
+      "description": "数据库连接参数：驱动、链接、用户名和密码",
+      "sourceType": "top.iceclean.logtrace.config.LogTraceConfig$Database"
+    },
+    {
+      "name": "log-trace.data-base.username",
+      "type": "java.lang.String",
+      "description": "数据库连接参数：驱动、链接、用户名和密码",
+      "sourceType": "top.iceclean.logtrace.config.LogTraceConfig$Database"
+    },
+    {
+      "name": "log-trace.file.enabled",
+      "type": "java.lang.Boolean[]",
+      "description": "文件默认不输出",
+      "sourceType": "top.iceclean.logtrace.config.LogTraceConfig$File",
+      "defaultValue": []
+    },
+    {
+      "name": "log-trace.file.pattern",
+      "type": "java.lang.String[]",
+      "description": "输出格式",
+      "sourceType": "top.iceclean.logtrace.config.LogTraceConfig$File",
+      "defaultValue": []
+    },
+    {
+      "name": "log-trace.file.target",
+      "type": "java.lang.String[]",
+      "description": "输出的目标文件",
+      "sourceType": "top.iceclean.logtrace.config.LogTraceConfig$File",
+      "defaultValue": []
+    },
+    {
+      "name": "log-trace.mode",
+      "type": "java.lang.String",
+      "description": "日志的显示类型 默认为记录模式",
+      "sourceType": "top.iceclean.logtrace.config.LogTraceConfig"
+    },
+    {
+      "name": "log-trace.output.come-param",
+      "type": "java.lang.Boolean",
+      "description": "是否记录函数入参和返回值信息 详细模式下这两个配置默认开启",
+      "sourceType": "top.iceclean.logtrace.config.LogTraceConfig$Output",
+      "defaultValue": true
+    },
+    {
+      "name": "log-trace.output.exit-return",
+      "type": "java.lang.Boolean",
+      "sourceType": "top.iceclean.logtrace.config.LogTraceConfig$Output",
+      "defaultValue": true
+    }
+  ],
+  "hints": []
+}
