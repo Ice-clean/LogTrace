@@ -127,14 +127,14 @@ public class LogHandler {
      * @param type 日志类型过滤
      * @param last 倒数第 n 页
      * @param max 每一页的数量
+     * @param offset 分页偏移量
      * @return 日志列表
      */
-    public List<LogTrace> getLogTraceList(String level, String type, int last, int max) {
-
+    public List<LogTrace> getLogTraceList(String level, String type, int last, int max, int offset) {
         // 存储结果
         List<LogTrace> logTraceList = new ArrayList<>();
         // 获取预编译语句
-        PreparedStatement getLogHead = getLogHeadPreparedStatement(level, type, last, max);
+        PreparedStatement getLogHead = getLogHeadPreparedStatement(level, type, last, max, offset);
         PreparedStatement getLogData = getLogDataPreparedStatement();
 
         if (getLogHead != null && getLogData != null) {
@@ -163,7 +163,7 @@ public class LogHandler {
                     logTraceList.add(logTrace);
                 }
                 resultSet.close();
-                return logTraceList.size() == 0 ? null : logTraceList;
+                return logTraceList;
             } catch (SQLException e) {
                 log.error("查询日志头失败：" + e.toString());
             } finally {
@@ -176,7 +176,7 @@ public class LogHandler {
             }
         }
 
-        return null;
+        return logTraceList;
     }
 
     private List<LogData> getLogDataList(int headId, PreparedStatement getLogData) {
@@ -210,21 +210,22 @@ public class LogHandler {
         return null;
     }
 
-    private PreparedStatement getLogHeadPreparedStatement(String level, String type, int last, int max) {
+    private PreparedStatement getLogHeadPreparedStatement(String level, String type, int last, int max, int offset) {
         // 拼接 sql 语句
         int num = 0;
         StringBuilder sql = new StringBuilder();
         sql.append("select * from t_log_head where 1 = 1 ");
-        if (level != null && !"null".equals(level)) {
+        if (level != null && !"ALL".equals(level)) {
             num += 1;
             sql.append("and log_level = ? ");
         }
-        if (type != null && !"null".equals(level)) {
+        if (type != null && !"ALL".equals(level)) {
             num += 2;
             sql.append("and log_type = ? ");
         }
-        sql.append("limit ").append(last).append(",").append(max);
+        sql.append("limit ").append(offset + max * last).append(",").append(max);
 
+        System.out.println(sql.toString());
         try {
             Connection connection = dataSource.getConnection();
             PreparedStatement getLogHead = connection.prepareStatement(sql.toString());

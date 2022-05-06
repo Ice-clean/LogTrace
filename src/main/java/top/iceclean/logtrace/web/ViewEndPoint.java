@@ -27,19 +27,25 @@ import java.util.ArrayList;
 @ServerEndpoint("/log")
 public class ViewEndPoint {
     /** 保存全部会话 */
-    private static final ArrayList<Session> CONNECT = new ArrayList<>();
+    private static final ArrayList<ViewEndPoint> CONNECT = new ArrayList<>();
     private static int incrementNum = 0;
 
     /** 当前会话 */
     private Session session;
 
-    /** 日志操作 */
+    /** 日志操作
+     *  */
     @Autowired
     private LogHandler logHandler;
 
+    /** 保存筛选状态（筛选的等级和类别） */
+    private String level = "ALL", type = "ALL";
+    /** 记录筛选偏移量，分页从 offset 开始进行，在一次筛选中，若有新的日志插入到数据库，则 offset+1 */
+    private int offset;
+
     @GetMapping("/log")
     public String logView() {
-        return "log.html";
+        return "index.html";
     }
 
     @ResponseBody
@@ -47,22 +53,40 @@ public class ViewEndPoint {
     public Object getLogMessage(@PathVariable String level, @PathVariable String type,
                                 @PathVariable int last, @PathVariable int max) {
         if (LogTraceConfig.database.isEnabled()) {
-            return logHandler.getLogTraceList(level, type, last, max);
+            offset = 0;
+            this.level = level;
+            this.type = type;
+            System.out.printf("%s %s %d %d %d", level, type, last, max, offset);
+            return logHandler.getLogTraceList(level, type, last, max, offset);
         }
         return null;
     }
 
 //    @GetMapping("/log/read/{logId}")
-//    public Object readLogMessage() {
+//    public Object readLogMessage(@PathVariable int logId) {
 //
 //    }
+
+
+    public Session getSession() {
+        return session;
+    }
+
+    public void incrementOffset() {
+        offset++;
+    }
+
+    public boolean needSend(LogTrace logTrace) {
+        return ("ALL".equals(level) || level.equals(logTrace.getLevel())) &&
+                "ALL".equals(type) || type.equals(logTrace.getType());
+    }
 
     @OnOpen
     public void onOpen(Session session) {
         incrementNum++;
         log.info("新日志请求连接 id=" + incrementNum);
         this.session = session;
-        CONNECT.add(session);
+        CONNECT.add(this);
     }
 
     @OnMessage
@@ -72,13 +96,13 @@ public class ViewEndPoint {
 
     @OnClose
     public void onClose() {
-        CONNECT.remove(session);
+        CONNECT.remove(this);
         log.info("请求连接 id=" + incrementNum + " 断开");
     }
 
     @OnError
     public void onError(Throwable e) {
-        CONNECT.remove(session);
+        CONNECT.remove(this);
         log.info("捕获到异常" + e.getMessage());
     }
 
@@ -86,8 +110,13 @@ public class ViewEndPoint {
     public static void castLogMessage(LogTrace logTrace) throws IOException {
         ObjectMapper objectMapper = new ObjectMapper();
         String message = objectMapper.writeValueAsString(logTrace);
-        for (Session session : CONNECT) {
-            session.getBasicRemote().sendText(message);
+        for (ViewEndPoint endPoint : CONNECT) {
+            // 偏移量自增
+            endPoint.incrementOffset();
+            // 判断是否发送发送会话
+            if (endPoint.needSend(logTrace)) {
+                endPoint.getSession().getBasicRemote().sendText(message);
+            }
         }
     }
 }
