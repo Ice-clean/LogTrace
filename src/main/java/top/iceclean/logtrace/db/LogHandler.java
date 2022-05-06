@@ -7,10 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -69,7 +66,7 @@ public class LogHandler {
                     key = generatedKeys.getInt(1);
                 }
             }
-            insertHead.close();
+            insertHead.getConnection().close();
         } catch (SQLException e) {
             log.error("插入日志头失败：" + e.toString());
         }
@@ -118,7 +115,7 @@ public class LogHandler {
         }
 
         try {
-            insertMessage.close();
+            insertMessage.getConnection().close();
         } catch (SQLException sqlException) {
             sqlException.printStackTrace();
         }
@@ -133,11 +130,14 @@ public class LogHandler {
      * @return 日志列表
      */
     public List<LogTrace> getLogTraceList(String level, String type, int last, int max) {
+
         // 存储结果
         List<LogTrace> logTraceList = new ArrayList<>();
         // 获取预编译语句
         PreparedStatement getLogHead = getLogHeadPreparedStatement(level, type, last, max);
-        if (getLogHead != null) {
+        PreparedStatement getLogData = getLogDataPreparedStatement();
+
+        if (getLogHead != null && getLogData != null) {
             try {
                 // 把所有日志取出来
                 ResultSet resultSet = getLogHead.executeQuery();
@@ -159,27 +159,34 @@ public class LogHandler {
                     logTrace.setCreateTime(resultSet.getString(14));
 
                     // 获取具体日志信息列表
-                    logTrace.setLogDataList(getLogDataList(resultSet.getInt(1)));
+                    logTrace.setLogDataList(getLogDataList(resultSet.getInt(1), getLogData));
                     logTraceList.add(logTrace);
                 }
-                getLogHead.close();
+                resultSet.close();
                 return logTraceList.size() == 0 ? null : logTraceList;
             } catch (SQLException e) {
                 log.error("查询日志头失败：" + e.toString());
+            } finally {
+                try {
+                    getLogData.getConnection().close();
+                    getLogHead.getConnection().close();
+                } catch (SQLException e) {
+                    log.error("关闭连接失败：" + e.toString());
+                }
             }
         }
 
         return null;
     }
 
-    public List<LogData> getLogDataList(int headId) {
+    private List<LogData> getLogDataList(int headId, PreparedStatement getLogData) {
         // 存放结果
         List<LogData> logDataList = new ArrayList<>();
         // 获取预编译语句
-        PreparedStatement getLogData = getLogDataPreparedStatement(headId);
         if (getLogData != null) {
             try {
                 // 将日志信息取出来
+                getLogData.setInt(1, headId);
                 ResultSet resultSet = getLogData.executeQuery();
                 while (resultSet.next()) {
                     // 判断是否为为入参，是的话将参数列表串转化为参数列表
@@ -219,7 +226,8 @@ public class LogHandler {
         sql.append("limit ").append(last).append(",").append(max);
 
         try {
-            PreparedStatement getLogHead = dataSource.getConnection().prepareStatement(sql.toString());
+            Connection connection = dataSource.getConnection();
+            PreparedStatement getLogHead = connection.prepareStatement(sql.toString());
             switch (num) {
                 case 1: getLogHead.setString(1, level); break;
                 case 2: getLogHead.setString(1, type); break;
@@ -229,6 +237,7 @@ public class LogHandler {
                     break;
                 default:
             }
+//            connection.close();
             return getLogHead;
         } catch (SQLException e) {
             log.error("查询日志头失败：" + e.toString());
@@ -237,11 +246,9 @@ public class LogHandler {
         return null;
     }
 
-    private PreparedStatement getLogDataPreparedStatement(int headId) {
+    private PreparedStatement getLogDataPreparedStatement() {
         try {
-            PreparedStatement getLogData = dataSource.getConnection().prepareStatement("select * from t_log_message where head_id = ?");
-            getLogData.setInt(1, headId);
-            return getLogData;
+            return dataSource.getConnection().prepareStatement("select * from t_log_message where head_id = ?");
         } catch (SQLException e) {
             log.error("查询日志信息失败：" + e.toString());
         }
