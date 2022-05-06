@@ -1,5 +1,6 @@
 package top.iceclean.logtrace.db;
 
+import ch.qos.logback.classic.spi.ILoggingEvent;
 import top.iceclean.logtrace.bean.LogData;
 import top.iceclean.logtrace.bean.LogTrace;
 import lombok.extern.slf4j.Slf4j;
@@ -45,13 +46,13 @@ public class LogHandler {
      * @param logTrace logTrace 日志
      * @return 日志头主键（插入失败返回 0）
      */
-    public int insertHead(String level, String threadName, String loggerName, LogTrace logTrace) {
+    public int insertHead(ILoggingEvent event, LogTrace logTrace) {
         int key = 0;
         try {
             PreparedStatement insertHead = dataSource.getConnection().prepareStatement(INSERT_HEAD_LOG_SQL, Statement.RETURN_GENERATED_KEYS);
-            insertHead.setString(1, level);
-            insertHead.setString(2, threadName);
-            insertHead.setString(3, loggerName);
+            insertHead.setString(1, event.getLevel().levelStr);
+            insertHead.setString(2, event.getThreadName());
+            insertHead.setString(3, event.getLoggerName());
             insertHead.setString(4, logTrace.getMode());
             insertHead.setString(5, logTrace.getType());
             insertHead.setString(6, logTrace.getRequestPath());
@@ -82,7 +83,7 @@ public class LogHandler {
     public void insertMessage(LogTrace logTrace, int key) {
         // 检查主键
         if (key == 0) {
-            log.info("插入日志信息失败，主键获取不到");
+            log.error("插入日志信息失败，主键获取不到");
             return;
         }
 
@@ -219,11 +220,11 @@ public class LogHandler {
             num += 1;
             sql.append("and log_level = ? ");
         }
-        if (type != null && !"ALL".equals(level)) {
+        if (type != null && !"ALL".equals(type)) {
             num += 2;
             sql.append("and log_type = ? ");
         }
-        sql.append("limit ").append(offset + max * last).append(",").append(max);
+        sql.append("order by head_id desc ").append("limit ").append(offset + max * last).append(",").append(max);
 
         System.out.println(sql.toString());
         try {
@@ -238,7 +239,6 @@ public class LogHandler {
                     break;
                 default:
             }
-//            connection.close();
             return getLogHead;
         } catch (SQLException e) {
             log.error("查询日志头失败：" + e.toString());

@@ -1,12 +1,5 @@
 package top.iceclean.logtrace.spi;
 
-import top.iceclean.logtrace.annotation.LogMessage;
-import top.iceclean.logtrace.bean.LogTrace;
-import top.iceclean.logtrace.config.LogTraceConfig;
-import top.iceclean.logtrace.constants.LogLevel;
-import top.iceclean.logtrace.constants.LogMode;
-import top.iceclean.logtrace.constants.LogType;
-import top.iceclean.logtrace.web.ViewEndPoint;
 import lombok.extern.slf4j.Slf4j;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
@@ -16,9 +9,18 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import top.iceclean.logtrace.annotation.LogMessage;
+import top.iceclean.logtrace.bean.LogTrace;
+import top.iceclean.logtrace.config.LogTraceConfig;
+import top.iceclean.logtrace.constants.LogLevel;
+import top.iceclean.logtrace.constants.LogMode;
+import top.iceclean.logtrace.constants.LogType;
+import top.iceclean.logtrace.web.ViewEndPoint;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 
 /**
@@ -71,6 +73,9 @@ public class LogAdvice implements MethodInterceptor {
             }
 
             // 将日志同步到前端
+            systemLog.setCreateTime(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(LocalDateTime.now()));
+            systemLog.setThread(Thread.currentThread().getName());
+            systemLog.setSite("iceclean.customlog.spi.LogAdvice");
             ViewEndPoint.castLogMessage(systemLog);
         } else if (threadLog != null && LogMode.MODE_DETAIL.equals(LogTraceConfig.mode) && LogTraceConfig.Output.exitReturn){
             // 否则在详细模式下添加中间函数的返回值日志

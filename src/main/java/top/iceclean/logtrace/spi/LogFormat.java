@@ -1,16 +1,22 @@
 package top.iceclean.logtrace.spi;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import javafx.util.Pair;
 import top.iceclean.logtrace.bean.LogData;
 import top.iceclean.logtrace.bean.LogTrace;
 import top.iceclean.logtrace.constants.LogLevel;
 import top.iceclean.logtrace.constants.LogMode;
 import top.iceclean.logtrace.constants.LogStyle;
-import javafx.util.Pair;
+import top.iceclean.logtrace.constants.LogType;
 
 import java.lang.reflect.Parameter;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * 日志格式处理器
@@ -30,6 +36,9 @@ public class LogFormat {
     public static final Integer PURPLE  = 35;
     public static final Integer CYAN    = 36;
     public static final Integer WHITE   = 37;
+
+    /** 匹配 LogTrace 格式 */
+    public static final Pattern logTracePattern = Pattern.compile("((INLINE)|(RECORD)|(DETAIL)) \\S+\\n");
 
     /**
      * 为内容更改显示颜色
@@ -93,7 +102,7 @@ public class LogFormat {
             return builder.toString();
         }
 
-        return "null";
+        return "";
     }
 
     /**
@@ -109,7 +118,7 @@ public class LogFormat {
             }
             return builder.toString();
         }
-        return "null";
+        return "";
     }
 
     /**
@@ -215,11 +224,12 @@ public class LogFormat {
      * @return 目标参数列表
      */
     public static List<Pair<String, Object>> getParamList(String paramString) {
-        if (!"null".equals(paramString)) {
+        if (!"".equals(paramString)) {
             String[] paramArray = paramString.split("\\|");
             List<Pair<String, Object>> paramList = new ArrayList<>(paramArray.length);
             for (String paramPair : paramArray) {
                 String[] split = paramPair.split("=", 2);
+                System.out.println(split);
                 paramList.add(new Pair<>(split[0], split[1]));
             }
             return paramList;
@@ -233,10 +243,40 @@ public class LogFormat {
      * @return 目标堆栈列表
      */
     public static List<String> getStackList(String stackString) {
-        if (!"null".equals(stackString)) {
+        if (!"".equals(stackString)) {
             String[] stackArray = stackString.split("\\|");
             return new ArrayList<>(Arrays.asList(stackArray));
         }
         return null;
+    }
+
+    /**
+     * 判断一个日志是否为 LogTrace 日志
+     * @param event logback 的日志事件
+     * @return 是 LogTrace 日志则返回 true，否则 false
+     */
+    public static boolean isLogTrace(ILoggingEvent event) {
+       return logTracePattern.matcher(event.getMessage()).find();
+    }
+
+    /**
+     * 获取其他包的日志
+     * @param event logback 的日志事件
+     * @return LogTrace 日志
+     */
+    public static LogTrace getOtherLog(ILoggingEvent event) {
+        LogTrace logTrace = new LogTrace();
+        logTrace.setCreateTime(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(LocalDateTime.now()));
+        logTrace.setLevel(event.getLevel().levelStr);
+        logTrace.setThread(Thread.currentThread().getName());
+        logTrace.setSite(event.getLoggerName());
+        logTrace.setMode(LogMode.MODE_INLINE);
+        logTrace.setType(LogType.TYPE_OTHER);
+        if (event.getLevel().equals(Level.INFO)) {
+            logTrace.info(event.getFormattedMessage());
+        } else {
+            logTrace.error(event.getFormattedMessage());
+        }
+        return logTrace;
     }
 }

@@ -61,7 +61,7 @@ public class LogData {
     public LogData(Method method, String returnString) {
         this.level = LogLevel.LEVEL_OUT;
         this.site = String.format("%s_%s", method.getDeclaringClass().getSimpleName(), method.getName());
-        this.content = returnString == null || returnString.isEmpty() ? "null" : returnString;
+        this.content = returnString == null || returnString.isEmpty() ? "" : returnString;
         this.paramList = null;
     }
 

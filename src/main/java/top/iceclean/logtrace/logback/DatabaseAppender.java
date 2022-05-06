@@ -2,10 +2,10 @@ package top.iceclean.logtrace.logback;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.AppenderBase;
+import org.springframework.stereotype.Component;
 import top.iceclean.logtrace.bean.LogTrace;
 import top.iceclean.logtrace.db.LogHandler;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
+import top.iceclean.logtrace.spi.LogFormat;
 
 /**
  * 重写 logback 的 UnsynchronizedAppenderBase
@@ -13,7 +13,6 @@ import org.springframework.stereotype.Component;
  * @author : Ice'Clean
  * @date : 2022-04-30
  */
-@Slf4j
 @Component
 public class DatabaseAppender extends AppenderBase<ILoggingEvent> {
 
@@ -22,15 +21,23 @@ public class DatabaseAppender extends AppenderBase<ILoggingEvent> {
 
     @Override
     protected void append(ILoggingEvent event) {
-        // 获取日志追踪器
-        LogTrace logTrace = LogTrace.getLogTrace();
-        if (logTrace != null) {
-            // 先插入日志头，然后插入日志信息
-            int key = logHandler.insertHead(event.getLevel().levelStr,
-                    event.getThreadName(), event.getLoggerName(), logTrace);
+        // 判断日志类型
+        if (LogFormat.isLogTrace(event)) {
+            // 获取日志追踪器
+            LogTrace logTrace = LogTrace.getLogTrace();
+            if (logTrace != null) {
+                // 先插入日志头，然后插入日志信息
+                int key = logHandler.insertHead(event, logTrace);
+                logHandler.insertMessage(logTrace, key);
+                // 完成日志
+                logTrace.finish();
+            }
+        } else {
+            // 生成 OTHER 类型的日志
+            LogTrace logTrace = LogFormat.getOtherLog(event);
+            int key = logHandler.insertHead(event, logTrace);
             logHandler.insertMessage(logTrace, key);
-            // 完成日志
-            logTrace.finish();
         }
+
     }
 }
