@@ -56,10 +56,9 @@ public class ViewEndPoint {
             offset = 0;
             this.level = level;
             this.type = type;
-            System.out.printf("%s %s %d %d %d", level, type, last, max, offset);
             return logHandler.getLogTraceList(level, type, last, max, offset);
         }
-        return null;
+        return new ArrayList<>();
     }
 
 //    @GetMapping("/log/read/{logId}")
