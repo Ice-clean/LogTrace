@@ -15,10 +15,7 @@ import org.springframework.stereotype.Component;
 @Component
 @ConfigurationProperties(prefix = "log-trace")
 public class LogTraceConfig {
-    /**
-     * 日志的显示类型
-     * 默认为记录模式
-     */
+    /** 日志的显示类型，默认为记录模式 */
     public static String mode = LogMode.MODE_RECORD;
     /** 控制台输出配置 */
     public static Console console = new Console();
@@ -30,6 +27,11 @@ public class LogTraceConfig {
     public static Output output = new Output();
     /** 日志的生命周期，由 appender 的数量决定 */
     public static int lifeTime = 0;
+    /** 日志为 null 值时的默认值 */
+    public static String DEFAULT_VALUE = "无";
+
+    /** TODO：需要去掉，测试用的字段 */
+    public static String datasourceInfo;
 
     /** 控制台输出配置 */
     public static class Console {
@@ -222,11 +224,21 @@ public class LogTraceConfig {
         LogTraceConfig.output = output;
     }
 
+    public String getDefaultValue() {
+        return DEFAULT_VALUE;
+    }
+
+    public void setDefaultValue(String defaultValue) {
+        DEFAULT_VALUE = defaultValue;
+    }
+
     @Bean
     public AspectJExpressionPointcutAdvisor configAdvisor() {
         AspectJExpressionPointcutAdvisor advisor = new AspectJExpressionPointcutAdvisor();
         advisor.setAdvice(new LogAdvice());
         advisor.setExpression("@within(top.iceclean.logtrace.annotation.EnableLogTrace)");
+//        advisor.setExpression("execution(* com.iceclean.siyuanpatch.controller.*.*(..)) || " +
+//                "execution(* com.iceclean.siyuanpatch.service.*.*(..))");
         return advisor;
     }
 }

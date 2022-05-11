@@ -6,6 +6,7 @@ import top.iceclean.logtrace.bean.LogTrace;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import top.iceclean.logtrace.config.LogTraceConfig;
 
 import javax.sql.DataSource;
 import java.sql.*;
@@ -40,6 +41,9 @@ public class LogHandler {
         LogHandler.dataSource = dataSource;
     }
 
+    public void updateRead() {
+
+    }
     /**
      * 插入日志头
      * @param event logback 日志
@@ -47,6 +51,7 @@ public class LogHandler {
      * @return 日志头主键（插入失败返回 0）
      */
     public int insertHead(ILoggingEvent event, LogTrace logTrace) {
+        LogTraceConfig.datasourceInfo = dataSource.toString();
         int key = 0;
         try {
             PreparedStatement insertHead = dataSource.getConnection().prepareStatement(INSERT_HEAD_LOG_SQL, Statement.RETURN_GENERATED_KEYS);
@@ -81,6 +86,8 @@ public class LogHandler {
      * @param key 日志头主键
      */
     public void insertMessage(LogTrace logTrace, int key) {
+        LogTraceConfig.datasourceInfo = dataSource.toString();
+
         // 检查主键
         if (key == 0) {
             log.error("插入日志信息失败，主键获取不到");
@@ -132,6 +139,8 @@ public class LogHandler {
      * @return 日志列表
      */
     public List<LogTrace> getLogTraceList(String level, String type, int last, int max, int offset) {
+        LogTraceConfig.datasourceInfo = dataSource.toString();
+
         // 存储结果
         List<LogTrace> logTraceList = new ArrayList<>();
         // 获取预编译语句

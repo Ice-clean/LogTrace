@@ -65,9 +65,9 @@ public class LogProcessor extends AbstractProcessor {
 
                                 // 在构造方法中，有 super 语句的话获取日志需要放到第二句
                                 if (methodTree.getName().toString().contains("<init>") && stats.size() > 0 && stats.get(0).toString().contains("super")) {
-                                    stats.tail.prepend(createGetCustomStatement());
+                                    stats.tail.prepend(createGetLogTraceStatement());
                                 } else {
-                                    stats = stats.prepend(createGetCustomStatement());
+                                    stats = stats.prepend(createGetLogTraceStatement());
                                 }
 
                                 methodTree.body.stats = stats;
@@ -79,21 +79,55 @@ public class LogProcessor extends AbstractProcessor {
         return true;
     }
 
-    public JCTree.JCStatement createGetCustomStatement() {
-        // logTrace = LogTrace.getLogTrace();
-        return treeMaker.Exec(
-                treeMaker.Assign(
-                        treeMaker.Ident(names.fromString("logTrace")),
-                        treeMaker.Apply(
-                                List.nil(),
-                                treeMaker.Select(
-                                        memberAccess("top.iceclean.logtrace.bean.LogTrace"),
-                                        names.fromString("getLogTrace")
-                                ),
-                                List.nil()
-                        )
+
+    /**
+     * 创建一个变量并初始化
+     * @param modifiers 修改器
+     * @param type 变量类型（全类名）
+     * @param name 变量名称
+     * @param init 变量初始化语句
+     * @return 创建变量并赋值的语句
+     */
+    private JCTree.JCVariableDecl makeVarDef(JCTree.JCModifiers modifiers, String type, String name, JCTree.JCExpression init) {
+        return treeMaker.VarDef(
+                modifiers,
+                // 变量名字
+                names.fromString(name),
+                // 变量类型
+                memberAccess(type),
+                // 初始化语句
+                init
+        );
+    }
+
+    public JCTree.JCStatement createGetLogTraceStatement() {
+        // LogTrace logTrace = LogTrace.getLogTrace();
+        return makeVarDef(
+                treeMaker.Modifiers(0),
+                "top.iceclean.logtrace.bean.LogTrace",
+                "logTrace",
+                treeMaker.Apply(
+                        List.nil(),
+                        treeMaker.Select(
+                                memberAccess("top.iceclean.logtrace.bean.LogTrace"),
+                                names.fromString("getLogTrace")
+                        ),
+                        List.nil()
                 )
         );
+//        return treeMaker.Exec(
+//                treeMaker.Assign(
+//                        treeMaker.Ident(names.fromString("logTrace")),
+//                        treeMaker.Apply(
+//                                List.nil(),
+//                                treeMaker.Select(
+//                                        memberAccess("top.iceclean.logtrace.bean.LogTrace"),
+//                                        names.fromString("getLogTrace")
+//                                ),
+//                                List.nil()
+//                        )
+//                )
+//        );
     }
 
     /**

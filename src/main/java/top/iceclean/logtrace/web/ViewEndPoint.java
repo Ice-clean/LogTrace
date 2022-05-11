@@ -2,15 +2,15 @@ package top.iceclean.logtrace.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import top.iceclean.logtrace.bean.LogTrace;
-import top.iceclean.logtrace.config.LogTraceConfig;
-import top.iceclean.logtrace.db.LogHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.ResponseBody;
+import top.iceclean.logtrace.bean.LogTrace;
+import top.iceclean.logtrace.config.LogTraceConfig;
+import top.iceclean.logtrace.db.LogHandler;
 
 import javax.websocket.*;
 import javax.websocket.server.ServerEndpoint;
@@ -110,12 +110,14 @@ public class ViewEndPoint {
     public static void castLogMessage(LogTrace logTrace) throws IOException {
         ObjectMapper objectMapper = new ObjectMapper();
         String message = objectMapper.writeValueAsString(logTrace);
-        for (ViewEndPoint endPoint : CONNECT) {
-            // 偏移量自增
-            endPoint.incrementOffset();
-            // 判断是否发送发送会话
-            if (endPoint.needSend(logTrace)) {
-                endPoint.getSession().getBasicRemote().sendText(message);
+        synchronized (CONNECT) {
+            for (ViewEndPoint endPoint : CONNECT) {
+                // 偏移量自增
+                endPoint.incrementOffset();
+                // 判断是否发送发送会话
+                if (endPoint.needSend(logTrace)) {
+                    endPoint.getSession().getBasicRemote().sendText(message);
+                }
             }
         }
     }

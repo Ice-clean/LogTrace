@@ -1,7 +1,7 @@
 package top.iceclean.logtrace.logback;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.AppenderBase;
+import ch.qos.logback.core.UnsynchronizedAppenderBase;
 import org.springframework.stereotype.Component;
 import top.iceclean.logtrace.bean.LogTrace;
 import top.iceclean.logtrace.db.LogHandler;
@@ -14,7 +14,7 @@ import top.iceclean.logtrace.spi.LogFormat;
  * @date : 2022-04-30
  */
 @Component
-public class DatabaseAppender extends AppenderBase<ILoggingEvent> {
+public class DatabaseAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
 
     /** 注入数据库处理器 */
     private final LogHandler logHandler = new LogHandler();

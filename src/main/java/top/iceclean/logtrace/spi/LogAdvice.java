@@ -17,6 +17,7 @@ import top.iceclean.logtrace.constants.LogMode;
 import top.iceclean.logtrace.constants.LogType;
 import top.iceclean.logtrace.web.ViewEndPoint;
 
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.time.LocalDateTime;
@@ -39,6 +40,8 @@ public class LogAdvice implements MethodInterceptor {
         Parameter[] parameters = method.getParameters();
         Object[] args = invocation.getArguments();
 
+        System.out.println("受理方法：" + method.getName());
+
         // 获取该业务线（线程）绑定的系统自定义日志
         LogTrace threadLog = LogTrace.getLogTrace();
         LogTrace systemLog = null;
@@ -51,10 +54,9 @@ public class LogAdvice implements MethodInterceptor {
         }
 
         // 绑定操作日志
-        bindGeneralLog(method, parameters, args);
+        // bindGeneralLog(method, parameters, args);
 
-        // 执行并获取结果，同时为系统日志写入日志（该方法以及该方法调用的方法）
-        // 执行并获取结果，同时拦截异常
+        // 执行并获取结果，方法进入和退出都有相应记录，便于异常处理时回推到最初的方法
         LogTrace.getLogTrace().come();
         Object result = invocation.proceed();
         LogTrace.getLogTrace().exit();
@@ -79,7 +81,7 @@ public class LogAdvice implements MethodInterceptor {
             ViewEndPoint.castLogMessage(systemLog);
         } else if (threadLog != null && LogMode.MODE_DETAIL.equals(LogTraceConfig.mode) && LogTraceConfig.Output.exitReturn){
             // 否则在详细模式下添加中间函数的返回值日志
-            threadLog.outMethod(method, Optional.ofNullable(result).orElse("").toString());
+            threadLog.outMethod(method, Optional.ofNullable(result).orElse(LogTraceConfig.DEFAULT_VALUE).toString());
         }
 
         // 返回结果
@@ -150,7 +152,7 @@ public class LogAdvice implements MethodInterceptor {
      * @param exception 捕获到的异常
      */
     @AfterThrowing(value = "@within(top.iceclean.logtrace.annotation.EnableLogTrace)", throwing = "exception", argNames = "exception")
-    public void exceptionLog(Exception exception) {
+    public void exceptionLog(Exception exception) throws IOException {
         // 获取异常发生的方法
         StackTraceElement caller = exception.getStackTrace()[0];
 
@@ -164,6 +166,13 @@ public class LogAdvice implements MethodInterceptor {
                 threadLog.setStackTrace(exception.getStackTrace());
                 // 添加异常信息
                 log.error(threadLog.toString());
+
+                // 将日志同步到前端
+                threadLog.setCreateTime(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(LocalDateTime.now()));
+                threadLog.setThread(Thread.currentThread().getName());
+                threadLog.setSite("iceclean.customlog.spi.LogAdvice");
+                ViewEndPoint.castLogMessage(threadLog);
+                System.out.println("通知完前端了");
             }
         }
     }

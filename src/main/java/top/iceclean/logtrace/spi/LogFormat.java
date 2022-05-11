@@ -5,6 +5,7 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import javafx.util.Pair;
 import top.iceclean.logtrace.bean.LogData;
 import top.iceclean.logtrace.bean.LogTrace;
+import top.iceclean.logtrace.config.LogTraceConfig;
 import top.iceclean.logtrace.constants.LogLevel;
 import top.iceclean.logtrace.constants.LogMode;
 import top.iceclean.logtrace.constants.LogStyle;
@@ -72,6 +73,9 @@ public class LogFormat {
      * @return 格式化后的参数字符串
      */
     public static String listParams(List<Pair<String, Object>> paramList, int color, int layer) {
+        if (paramList == null) {
+            return LogTraceConfig.DEFAULT_VALUE;
+        }
         // 参数数据建造器
         StringBuilder paramDataBuilder = new StringBuilder();
         // 提取出参数列表
@@ -84,7 +88,7 @@ public class LogFormat {
                     .append(color > 0 ? changeColor(paramPair.getKey(), color) : paramPair.getKey())
                     .append(" : ").append(paramPair.getValue());
         }
-        return paramDataBuilder.toString();
+        return paramDataBuilder.length() > 0 ? paramDataBuilder.toString() : LogTraceConfig.DEFAULT_VALUE;
     }
 
     /**
@@ -102,7 +106,7 @@ public class LogFormat {
             return builder.toString();
         }
 
-        return "";
+        return LogTraceConfig.DEFAULT_VALUE;
     }
 
     /**
@@ -118,7 +122,7 @@ public class LogFormat {
             }
             return builder.toString();
         }
-        return "";
+        return LogTraceConfig.DEFAULT_VALUE;
     }
 
     /**
@@ -224,12 +228,11 @@ public class LogFormat {
      * @return 目标参数列表
      */
     public static List<Pair<String, Object>> getParamList(String paramString) {
-        if (!"".equals(paramString)) {
+        if (!LogTraceConfig.DEFAULT_VALUE.equals(paramString)) {
             String[] paramArray = paramString.split("\\|");
             List<Pair<String, Object>> paramList = new ArrayList<>(paramArray.length);
             for (String paramPair : paramArray) {
                 String[] split = paramPair.split("=", 2);
-                System.out.println(split);
                 paramList.add(new Pair<>(split[0], split[1]));
             }
             return paramList;
@@ -243,7 +246,7 @@ public class LogFormat {
      * @return 目标堆栈列表
      */
     public static List<String> getStackList(String stackString) {
-        if (!"".equals(stackString)) {
+        if (!LogTraceConfig.DEFAULT_VALUE.equals(stackString)) {
             String[] stackArray = stackString.split("\\|");
             return new ArrayList<>(Arrays.asList(stackArray));
         }

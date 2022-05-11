@@ -26,10 +26,10 @@ public class LogTrace implements Logger {
     private static final ConcurrentMap<String, LogTrace> LOG_TRACE_MAP = new ConcurrentHashMap<>();
 
     /** 原日志头信息 */
-    private String thread = "";
-    private String site = "";
+    private String thread = LogTraceConfig.DEFAULT_VALUE;
+    private String site = LogTraceConfig.DEFAULT_VALUE;
     private Integer read = 0;
-    private String createTime = "";
+    private String createTime = LogTraceConfig.DEFAULT_VALUE;
 
     /** 日志级别（取所有日志信息的最高级别，默认为 INFO） */
     private String level = LogLevel.LEVEL_INFO;
@@ -41,13 +41,13 @@ public class LogTrace implements Logger {
     private List<LogData> logDataList = new ArrayList<>(5);
 
     /** 【记录模式】 日志的请求路径（针对于 Controller 层） */
-    private String requestPath = "";
+    private String requestPath = LogTraceConfig.DEFAULT_VALUE;
     /** 【记录模式】 产生日志的类名和方法名 */
-    private String className = "", methodName = "";
+    private String className = LogTraceConfig.DEFAULT_VALUE, methodName = LogTraceConfig.DEFAULT_VALUE;
     /** 【记录模式】 产生日志的方法中的参数个数和具体值 */
     private List<Pair<String, Object>> paramList;
     /** 【记录模式】 生日志方法中的返回值 */
-    private String returnString = "";
+    private String returnString = LogTraceConfig.DEFAULT_VALUE;
     /** 【记录模式】 堆栈调用链信息（针对于 ERROR 日志） */
     private List<String> stackList;
 
@@ -102,6 +102,7 @@ public class LogTrace implements Logger {
 
     public void finish() {
         if (--lifeTime == 0) {
+//            System.out.println(LOG_TRACE_MAP);
             removeLogTrace();
         }
     }
