@@ -11,6 +11,7 @@ import top.iceclean.logtrace.constants.LogMode;
 import top.iceclean.logtrace.constants.LogStyle;
 import top.iceclean.logtrace.constants.LogType;
 
+import java.io.File;
 import java.lang.reflect.Parameter;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -281,5 +282,30 @@ public class LogFormat {
             logTrace.error(event.getFormattedMessage());
         }
         return logTrace;
+    }
+
+    /**
+     * 在指定文件夹下查找包含指定名称的文件
+     * @param file 目标文件夹
+     * @param fileName 目标文件名称
+     * @return 文件大小和文件全路径对列表
+     */
+    public static List<Pair<Long, String>> findFile(File file, String fileName) {
+        File[] files = file.listFiles();
+        List<Pair<Long, String>> classNameList = new ArrayList<>();
+        if (files == null) {
+            return classNameList;
+        }
+
+        for (File f : files) {
+            if (f.isDirectory()) {
+                classNameList.addAll(findFile(f, fileName));
+            }
+            if (f.isFile() && f.getName().contains(fileName)) {
+                classNameList.add(new Pair<>(f.length(), f.getPath()));
+            }
+        }
+
+        return classNameList;
     }
 }

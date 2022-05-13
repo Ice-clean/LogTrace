@@ -1,21 +1,28 @@
 package top.iceclean.logtrace.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import javafx.util.Pair;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 import top.iceclean.logtrace.bean.LogTrace;
 import top.iceclean.logtrace.config.LogTraceConfig;
 import top.iceclean.logtrace.db.LogHandler;
+import top.iceclean.logtrace.spi.LogFormat;
 
 import javax.websocket.*;
 import javax.websocket.server.ServerEndpoint;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author : Ice'Clean
@@ -33,8 +40,7 @@ public class ViewEndPoint {
     /** 当前会话 */
     private Session session;
 
-    /** 日志操作
-     *  */
+    /** 日志操作 */
     @Autowired
     private LogHandler logHandler;
 
@@ -66,6 +72,45 @@ public class ViewEndPoint {
 //
 //    }
 
+    @ResponseBody
+    @PostMapping("/log/code")
+    public Object getCode(@RequestBody Map<String, String> className) {
+        try {
+            // 响应实体
+            Map<String, Object> response = new HashMap<>(4);
+            response.put("className", className.get("className"));
+            response.put("line", -1);
+            response.put("method", "");
+            response.put("code", "");
+
+            // 取出信息，格式如 LogFormat.java:279 getOtherLog
+            String[] info = className.get("className").split(":");
+            if (info.length == 2) {
+                String[] lineAndMethod = info[1].split(" ");
+                response.put("className", info[0]);
+                response.put("line", Integer.parseInt(lineAndMethod[0]));
+                response.put("method", lineAndMethod[1]);
+
+                // 获取字节码文件目录
+                File file = new File("src/main/java");
+                List<Pair<Long, String>> classNameList = LogFormat.findFile(file, info[0]);
+                if (classNameList.size() > 0) {
+                    // 读取类内容（置获取到第一个找到的）
+                    byte[] content = new byte[classNameList.get(0).getKey().intValue()];
+                    String path = classNameList.get(0).getValue();
+                    InputStream inputStream = new FileInputStream(path);
+                    int read = inputStream.read(content);
+                    inputStream.close();
+                    response.put("code", new String(content, StandardCharsets.UTF_8));
+                }
+            }
+
+            return response;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 
     public Session getSession() {
         return session;

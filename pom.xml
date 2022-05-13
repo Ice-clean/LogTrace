@@ -115,12 +115,13 @@
                         </goals>
                         <configuration>
                             <outputDirectory>target/classes</outputDirectory>
-                            <resources>                                <resource>
-                                <directory>${basedir}/src/main/resources/</directory>
-                                <includes>
-                                    <include>**/*</include>
-                                </includes>
-                            </resource>
+                            <resources>
+                                <resource>
+                                    <directory>${basedir}/src/main/resources/</directory>
+                                    <includes>
+                                        <include>**/*</include>
+                                    </includes>
+                                </resource>
                             </resources>
                         </configuration>
                     </execution>

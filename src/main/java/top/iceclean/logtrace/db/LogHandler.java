@@ -235,7 +235,6 @@ public class LogHandler {
         }
         sql.append("order by head_id desc ").append("limit ").append(offset + max * last).append(",").append(max);
 
-        System.out.println(sql.toString());
         try {
             Connection connection = dataSource.getConnection();
             PreparedStatement getLogHead = connection.prepareStatement(sql.toString());

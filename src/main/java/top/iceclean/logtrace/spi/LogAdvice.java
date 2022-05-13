@@ -40,8 +40,6 @@ public class LogAdvice implements MethodInterceptor {
         Parameter[] parameters = method.getParameters();
         Object[] args = invocation.getArguments();
 
-        System.out.println("受理方法：" + method.getName());
-
         // 获取该业务线（线程）绑定的系统自定义日志
         LogTrace threadLog = LogTrace.getLogTrace();
         LogTrace systemLog = null;
@@ -172,7 +170,6 @@ public class LogAdvice implements MethodInterceptor {
                 threadLog.setThread(Thread.currentThread().getName());
                 threadLog.setSite("iceclean.customlog.spi.LogAdvice");
                 ViewEndPoint.castLogMessage(threadLog);
-                System.out.println("通知完前端了");
             }
         }
     }

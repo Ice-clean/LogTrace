@@ -102,7 +102,6 @@ public class LogTrace implements Logger {
 
     public void finish() {
         if (--lifeTime == 0) {
-//            System.out.println(LOG_TRACE_MAP);
             removeLogTrace();
         }
     }
